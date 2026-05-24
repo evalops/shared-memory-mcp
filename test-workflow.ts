@@ -365,6 +365,7 @@ async function main(): Promise<void> {
     client.cleanup();
     process.exit(1);
   }
+  client.cleanup();
 }
 
 if (require.main === module) {

@@ -8,7 +8,8 @@
     "start": "node dist/server.js",
     "dev": "ts-node src/server.ts",
     "test": "ts-node test-workflow.ts",
-    "test-workflow": "ts-node test-workflow.ts"
+    "test-workflow": "ts-node test-workflow.ts",
+    "mcp:inspect": "npx -y @modelcontextprotocol/inspector@0.15.0 --cli node dist/server.js --method tools/list"
   },
   "keywords": [],
   "author": "",
