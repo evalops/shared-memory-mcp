@@ -37,7 +37,7 @@ class MCPTestClient {
     console.log('🚀 Starting Shared Memory MCP Test Workflow\n');
     
     // Start the MCP server
-    this.server = spawn('npm', ['run', 'dev'], {
+    this.server = spawn(process.execPath, ['-r', 'ts-node/register', 'src/server.ts'], {
       stdio: ['pipe', 'pipe', 'pipe']
     });
 
@@ -341,10 +341,26 @@ class MCPTestClient {
     });
   }
 
-  cleanup(): void {
-    if (this.server) {
-      this.server.kill();
+  async cleanup(): Promise<void> {
+    if (!this.server) {
+      return;
     }
+
+    const server = this.server;
+    this.server = null;
+
+    if (server.exitCode !== null || server.signalCode !== null) {
+      return;
+    }
+
+    await new Promise<void>(resolve => {
+      const timeout = setTimeout(resolve, 2000);
+      server.once('exit', () => {
+        clearTimeout(timeout);
+        resolve();
+      });
+      server.kill('SIGTERM');
+    });
   }
 }
 
@@ -354,17 +370,17 @@ async function main(): Promise<void> {
   
   process.on('SIGINT', () => {
     console.log('\n🛑 Shutting down...');
-    client.cleanup();
-    process.exit(0);
+    void client.cleanup().finally(() => process.exit(0));
   });
 
   try {
     await client.start();
   } catch (error: any) {
     console.error('❌ Test failed:', error.message);
-    client.cleanup();
+    await client.cleanup();
     process.exit(1);
   }
+  await client.cleanup();
 }
 
 if (require.main === module) {
